@@ -2,13 +2,14 @@
 //  dnsPing.swift
 //  network_app
 //
-//  Created by Luke Hyatt on 7/10/25.
+//  Created by Luke Hyatt on 7/11/25.
 //
 
 import SwiftUI
 import Network
 import SystemConfiguration
 import Foundation
+import Darwin // For res_ninit, res_getservers, etc.
 
 //PINGING THE DNS, SAME AS THE GATEWAY, JUST WITH DNS
 
@@ -47,7 +48,7 @@ func dnsServerIP(
         // — Success path: Wi-Fi is up, grab DNS immediately
         monitor.pathUpdateHandler = { path in
             if path.status == .satisfied {
-                finish(fetchPrimaryDNSServer())
+                //finish(fetchPrimaryDNSServer())
             }
         }
         monitor.start(queue: .global(qos: .utility))
