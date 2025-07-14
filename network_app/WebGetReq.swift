@@ -20,6 +20,7 @@ func webCheck(website: String) -> String{
             guard error == nil else {
                 //print("Error:", error ?? "")
                 s = "Error: " + (error?.localizedDescription ?? "")
+                print(s)
                 return
             }
             guard let data = data else {
@@ -31,8 +32,10 @@ func webCheck(website: String) -> String{
                     let target = "Jamf Pro"    // ← whatever you’re looking for
                         if bodyText.contains(target) {
                             s = "Found “\(target)” in the response!"
+                            print( "Found “\(target)” in the response!")
                         } else {
                             s = "“\(target)” not found."
+                            print("“\(target)” not found.")
                         }
                 }
         }

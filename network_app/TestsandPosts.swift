@@ -14,13 +14,13 @@ func pingTest() {
         let ip = await gatewayIP() ?? "none"
         print("Gateway → \(ip)")
     }
-    Task {
-        if let dns = await dnsServerIP() {
-          print("DNS → \(dns)")
-        } else {
-          print("No Wi-Fi or no DNS within timeout")
-        }
-      }
+    //Task {
+    //if let dns = await dnsServerIP() {
+          //print("DNS → \(dns)")
+        //} else {
+          //print("No Wi-Fi or no DNS within timeout")
+        //}
+      //}
     Task{pingDNS(host: "8.8.8.8", domain: "google.com", timeout: 2) {
         
         rtt in
@@ -97,13 +97,13 @@ func post(){
         ip = ipp
     }
     var listy = ["DNS": true, "pingDNS": true, "Casper check": true]
-    Task {
-        if (await dnsServerIP()) != nil {
-        }
-        else {
-            listy["DNS"] = false
-        }
-      }
+    //Task {
+        //if (await dnsServerIP()) != nil {
+        //}
+        //else {
+            //listy["DNS"] = false
+        //}
+      //}
     Task{
         pingDNS(host: "8.8.8.8", domain: "google.com", timeout: 2) {
         
@@ -117,40 +117,51 @@ func post(){
     var m = ""
     Task{
         m = webCheck(website: "https://Casper.pinelakeprep.org:8443/")
-        if m != "found (Jamf Pro) in response!"{
+        if m != ("found \("Jamf Pro") in response!"){
             listy["Casper check"] = false
         }
     }
-    
     var msg = ""
-    if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == true{
-        msg = "All tests successful"
-        }
-    else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == true{
-        msg = "DNS server not found"
-        
+    if (listy["Casper check"] == true) && (listy["pingDNS"] == true){
+        msg = "all tests passed"
     }
-    else if listy["DNS"] == false && listy["pingDNS"] == false && listy["Casper Check"] == true{
-        msg = "DNS server not found and DNS ping to google not responsive"
-        
+    else if((listy["Casper check"] == true) && (listy["pingDNS"] == false)){
+        msg = "dns ping to google failed"
     }
-    else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == false{
-        msg = "DNS server not found and Casper GET unresponsive"
-        
-    }
-    else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == true{
-        msg = "DNS ping to google not responsive"
-        
-    }
-    else if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == false{
-        msg = "Casper GET unresponsive"
-    }
-    else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == false{
-        msg = "DNS ping to google unresponsive and Casper GET unresponsive"
+    else if((listy["Casper check"] == false) && (listy["pingDNS"] == true)){
+        msg = "get request to Casper failed"
     }
     else{
-        msg = "all tests failed(ping, pingDNS, Casper GET)"
+        msg = "all tests failed"
     }
+    //if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == true{
+        //msg = "All tests successful"
+        //}
+    //else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == true{
+        //msg = "DNS server not found"
+        
+    //}
+    //else if listy["DNS"] == false && listy["pingDNS"] == false && listy["Casper Check"] == true{
+       // msg = "DNS server not found and DNS ping to google not responsive"
+        
+    //}
+    //else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == false{
+        //msg = "DNS server not found and Casper GET unresponsive"
+        
+   // }
+    //else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == true{
+        //msg = "DNS ping to google not responsive"
+        
+    //}
+    //else if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == false{
+        //msg = "Casper GET unresponsive"
+    //}
+    //else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == false{
+        //msg = "DNS ping to google unresponsive and Casper GET unresponsive"
+    //}
+    //else{
+        //msg = "all tests failed(ping, pingDNS, Casper GET)"
+    //}
     
     
     sendLog(serial: "111", level: "3",srcIP: String(ip),srcMAC: "",user: "Network Tester", action: "Network test",msg: msg)

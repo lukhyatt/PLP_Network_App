@@ -63,15 +63,16 @@ func dnsServerIP(
 
 /// Peeks into the dynamic store to get the first DNS server address.
 /// The “State:/Network/Global/DNS” key holds a dictionary with kSCPropNetDNSServerAddresses.
-private func fetchPrimaryDNSServer() -> String? {
-    guard
-      let store   = SCDynamicStoreCreate(nil, "DNSQuery" as CFString, nil, nil),
-      let dnsDict = SCDynamicStoreCopyValue(store,
-                     "State:/Network/Global/DNS" as CFString) as? [String:Any],
-      let addrs   = dnsDict[kSCPropNetDNSServerAddresses as String] as? [String],
-      let first   = addrs.first
-    else {
-      return nil
-    }
-    return first
-}
+//private func fetchPrimaryDNSServer() -> String? {
+    //guard
+      //let store   = SCDynamicStoreCreate(nil, "DNSQuery" as CFString, nil, nil),
+      //let dnsDict = SCDynamicStoreCopyValue(store,
+                     //"State:/Network/Global/DNS" as CFString) as? [String:Any],
+      //let addrs   = dnsDict[kSCPropNetDNSServerAddresses as String] as? [String],
+      //let first   = addrs.first
+    //else {
+      //return nil
+    //}
+    //return first
+//}
+

@@ -20,78 +20,77 @@ struct ContentView: View {
     @State private var wifiIPAddress: String = "Fetching..."
     
     var body: some View {
-        ZStack {
-            // MARK: - Background
-            Image("PLP_homescreen")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea() // Makes the image go edge-to-edge
-            
-            // A dark, semi-transparent overlay to improve text readability
-            Rectangle()
-                .fill(.black.opacity(0.40))
-                .ignoresSafeArea()
-            
-            // MARK: - Main Content
-            VStack(spacing: 20) {
-                Spacer()
+        NavigationStack(path: $navigationPath){
+            ZStack {
+                // MARK: - Background
+                Image("PLP_homescreen")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea() // Makes the image go edge-to-edge
                 
-                // Main Title and Subtitle
-                VStack {
-                    Text("Network")
-                        .font(.system(size: 64, weight: .bold, design: .rounded))
-                    Text("Diagnostics")
-                        .font(.system(size: 48, weight: .light, design: .rounded))
-                        .opacity(0.8)
-                }
-                .foregroundColor(.white)
-                .shadow(color: .black.opacity(0.25), radius: 10, y: 5) // Subtle shadow for depth
+                // A dark, semi-transparent overlay to improve text readability
+                Rectangle()
+                    .fill(.black.opacity(0.40))
+                    .ignoresSafeArea()
                 
-                Spacer()
-                Spacer() // Use two spacers to push the button lower
-                
-                // MARK: - Action Button & Loading Indicator
-                if isTesting {
-                    // 2. Show a loading indicator when testing
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(1.5) // Make it a bit larger
-                } else {
-                    // 3. The new, professional-looking button
-                    Button(action: {
-                        // Start the test
-                        pingTest()
-                        //post()
-                        isTesting = true
-                    }) {
-                        Label("Begin Test", systemImage: "network")
-                            .font(.headline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding()
+                // MARK: - Main Content
+                VStack(spacing: 20) {
+                    Spacer()
+                    
+                    // Main Title and Subtitle
+                    VStack {
+                        Text("Network")
+                            .font(.system(size: 64, weight: .bold, design: .rounded))
+                        Text("Diagnostics")
+                            .font(.system(size: 48, weight: .light, design: .rounded))
+                            .opacity(0.8)
                     }
-                    .background(
-                        // A nice gradient instead of a flat color
-                        LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
-                    )
                     .foregroundColor(.white)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.3), radius: 10, y: 10)
-                    .transition(.opacity.combined(with: .scale)) // Animate the button's appearance
-                }
-                
-                Spacer()
-            }
-            .padding(.horizontal, 30) // Add horizontal padding to the whole VStack
-        }
-        // 2. Hide the navigation bar on this home screen for the full-screen effect.
-                    .toolbar(.hidden, for: .navigationBar)
-                    // 3. Define the destination for our route.
-                    .navigationDestination(for: NavigationRoute.self) { route in
-                        // When a 'results' route is added to the path, show ResultsView.
-                        if route == .results {
-                            ResultsView()
+                    .shadow(color: .black.opacity(0.25), radius: 10, y: 5) // Subtle shadow for depth
+                    
+                    Spacer()
+                    Spacer() // Use two spacers to push the button lower
+                    
+                    // MARK: - Action Button & Loading Indicator
+                    if isTesting {
+                        // 2. Show a loading indicator when testing
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5) // Make it a bit larger
+                    } else {
+                        // 3. The new, professional-looking button
+                        Button(action: {
+                            performNetworkTest()
+                        }) {
+                            Label("Begin Test", systemImage: "network")
+                                .font(.headline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding()
                         }
+                        .background(
+                            // A nice gradient instead of a flat color
+                            LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .foregroundColor(.white)
+                        .clipShape(Capsule())
+                        .shadow(color: .black.opacity(0.3), radius: 10, y: 10)
+                        .transition(.opacity.combined(with: .scale)) // Animate the button's appearance
                     }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 30) // Add horizontal padding to the whole VStack
+            }
+            // 2. Hide the navigation bar on this home screen for the full-screen effect.
+            .toolbar(.hidden, for: .navigationBar)
+            // 3. Define the destination for our route.
+            .navigationDestination(for: NavigationRoute.self) { route in
+                // When a 'results' route is added to the path, show ResultsView.
+                if route == .results {
+                    ResultsView()
+                }
+            }
+        }
     }
     // MARK: - Functions
         func performNetworkTest() {
@@ -102,7 +101,8 @@ struct ContentView: View {
             // Simulate a 1-second network test.
             // Your pingTest() and post() would happen here.
             pingTest()
-            //post()
+            //fetchWifiIP()
+            post()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 // When the test is done:
                 // 1. Stop the loading indicator.
@@ -123,6 +123,7 @@ struct ContentView: View {
                 // If Wi-Fi is off or not connected.
                 self.wifiIPAddress = "Not Connected"
             }
+            print(self.wifiIPAddress)
         }
 }
 
