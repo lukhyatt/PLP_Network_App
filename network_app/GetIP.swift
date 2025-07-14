@@ -67,3 +67,17 @@ struct IPAddressProvider {
         return allAddresses["\(interface)/ipv4"]
     }
 }
+
+/// Fetches the Wi-Fi IP address and updates the state.
+func fetchWifiIP() -> String?{
+        var wifiIPAddress: String = "Fetching..."
+        // "en0" is the standard interface name for Wi-Fi on iOS devices.
+        if let ip = IPAddressProvider.getIPAddress(for: "en0") {
+            // When this line runs, SwiftUI detects the change and updates the Text view.
+            wifiIPAddress = ip
+        } else {
+            // If Wi-Fi is off or not connected.
+            wifiIPAddress = "Not Connected"
+        }
+        return(wifiIPAddress)
+    }

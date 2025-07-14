@@ -11,8 +11,13 @@ import Foundation
 
 func pingTest() {
     Task { // create an async context
-        let ip = await gatewayIP() ?? "none"
-        print("Gateway → \(ip)")
+        Task {
+            if let gw = await currentGatewayAddress() {
+                print("Default gateway = \(gw)")
+            } else {
+                print("Gateway not available")
+            }
+        }
     }
     //Task {
     //if let dns = await dnsServerIP() {
@@ -83,7 +88,7 @@ func sendLog(
             return
         }
         if let http = response as? HTTPURLResponse {
-            print("ℹ️ Response status:", http.statusCode)
+            print("Response status:", http.statusCode)
         }
     }
     task.resume()
@@ -93,17 +98,17 @@ func sendLog(
 func post(){
     var ip = ""
     Task { // create an async context
-        let ipp = await gatewayIP() ?? "none"
+        let ipp = fetchWifiIP() ?? "none"
         ip = ipp
     }
-    var listy = ["DNS": true, "pingDNS": true, "Casper check": true]
-    //Task {
-        //if (await dnsServerIP()) != nil {
-        //}
-        //else {
-            //listy["DNS"] = false
-        //}
-      //}
+    var listy = ["GatewayIP": true, "pingDNS": true, "Casper Check": true]
+    Task {
+        if ((await currentGatewayAddress()) != nil) {
+        }
+        else {
+            listy["GatewayIP"] = false
+        }
+      }
     Task{
         pingDNS(host: "8.8.8.8", domain: "google.com", timeout: 2) {
         
@@ -118,50 +123,50 @@ func post(){
     Task{
         m = webCheck(website: "https://Casper.pinelakeprep.org:8443/")
         if m != ("found \("Jamf Pro") in response!"){
-            listy["Casper check"] = false
+            listy["Casper Check"] = false
         }
     }
     var msg = ""
-    if (listy["Casper check"] == true) && (listy["pingDNS"] == true){
-        msg = "all tests passed"
-    }
-    else if((listy["Casper check"] == true) && (listy["pingDNS"] == false)){
-        msg = "dns ping to google failed"
-    }
-    else if((listy["Casper check"] == false) && (listy["pingDNS"] == true)){
-        msg = "get request to Casper failed"
-    }
-    else{
-        msg = "all tests failed"
-    }
-    //if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == true{
-        //msg = "All tests successful"
-        //}
-    //else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == true{
-        //msg = "DNS server not found"
+//    if (listy["Casper check"] == true) && (listy["pingDNS"] == true){
+//        msg = "all tests passed"
+//    }
+//    else if((listy["Casper check"] == true) && (listy["pingDNS"] == false)){
+//        msg = "dns ping to google failed"
+//    }
+//    else if((listy["Casper check"] == false) && (listy["pingDNS"] == true)){
+//        msg = "get request to Casper failed"
+//    }
+//    else{
+//        msg = "all tests failed"
+//    }
+    if (listy["GatewayIP"] == true) && (listy["pingDNS"] == true) && (listy["Casper Check"] == true){
+        msg = "All tests successful"
+        }
+    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == true) && (listy["Casper Check"] == true){
+        msg = "Gateway address not found"
         
-    //}
-    //else if listy["DNS"] == false && listy["pingDNS"] == false && listy["Casper Check"] == true{
-       // msg = "DNS server not found and DNS ping to google not responsive"
+    }
+    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == false) && (listy["Casper Check"] == true){
+        msg = "Gateway address not found and DNS ping to google not responsive"
         
-    //}
-    //else if listy["DNS"] == false && listy["pingDNS"] == true && listy["Casper Check"] == false{
-        //msg = "DNS server not found and Casper GET unresponsive"
+    }
+    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == true) && (listy["Casper Check"] == false){
+        msg = "Gateway address not found and Casper GET unresponsive"
         
-   // }
-    //else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == true{
-        //msg = "DNS ping to google not responsive"
+    }
+    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == false) && (listy["Casper Check"] == true){
+        msg = "DNS ping to google not responsive"
         
-    //}
-    //else if listy["DNS"] == true && listy["pingDNS"] == true && listy["Casper Check"] == false{
-        //msg = "Casper GET unresponsive"
-    //}
-    //else if listy["DNS"] == true && listy["pingDNS"] == false && listy["Casper Check"] == false{
-        //msg = "DNS ping to google unresponsive and Casper GET unresponsive"
-    //}
-    //else{
-        //msg = "all tests failed(ping, pingDNS, Casper GET)"
-    //}
+    }
+    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == true) && (listy["Casper Check"] == false){
+        msg = "Casper GET unresponsive"
+    }
+    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == false) && (listy["Casper Check"] == false){
+        msg = "DNS ping to google unresponsive and Casper GET unresponsive"
+    }
+    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == false) && (listy["Casper Check"] == false){
+        msg = "All tests failed"
+    }
     
     
     sendLog(serial: "111", level: "3",srcIP: String(ip),srcMAC: "",user: "Network Tester", action: "Network test",msg: msg)
