@@ -19,7 +19,7 @@ struct ResultsView: View {
             )
             .ignoresSafeArea()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 30) {
                 // A big, friendly icon to give instant visual feedback.
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 100))
@@ -29,15 +29,15 @@ struct ResultsView: View {
                     .shadow(radius: 10)
                 
                 // The main message with good typography.
-                Text("You're good to go!")
+                Text(fmessage)
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 
                 // A secondary, more detailed message.
-                Text("Your network connection is stable and ready.")
-                    .font(.body)
-                    .foregroundColor(.white.opacity(0.8))
+                Text(message)
+                    .font(.largeTitle)
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.center)
             }
             .padding(30)

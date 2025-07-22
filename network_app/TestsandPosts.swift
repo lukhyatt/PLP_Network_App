@@ -12,10 +12,13 @@ import Foundation
 func pingTest() {
     Task { // create an async context
         Task {
-            if let gw = await currentGatewayAddress() {
-                print("Default gateway = \(gw)")
-            } else {
-                print("Gateway not available")
+            currentGatewayAddress(interface: .wifi) { address in
+                if let addr = address {
+                    print("Gateway is at \(addr)")
+                }
+                else {
+                    print("Timed out or no gateway found")
+                }
             }
         }
     }
@@ -26,7 +29,7 @@ func pingTest() {
           //print("No Wi-Fi or no DNS within timeout")
         //}
       //}
-    Task{pingDNS(host: "8.8.8.8", domain: "google.com", timeout: 2) {
+    Task{DNSquery(host: "8.8.8.8", domain: "google.com", timeout: 2) {
         
         rtt in
         if let rtt = rtt
@@ -39,7 +42,7 @@ func pingTest() {
         }
     }
         Task{
-            webCheck(website: "https://Casper.pinelakeprep.org:8443/")
+            print(webCheck(website: "https://example.com"))
         }
     }
     
@@ -88,88 +91,110 @@ func sendLog(
             return
         }
         if let http = response as? HTTPURLResponse {
-            print("Response status:", http.statusCode)
+            //print("Response status:", http.statusCode)
         }
     }
     task.resume()
 }
 
-
+var message = ""
+var fmessage = ""
 func post(){
     var ip = ""
     Task { // create an async context
         let ipp = fetchWifiIP() ?? "none"
         ip = ipp
     }
-    var listy = ["GatewayIP": true, "pingDNS": true, "Casper Check": true]
-    Task {
-        if ((await currentGatewayAddress()) != nil) {
+    var listy = ["GatewayIP": true, "DNSquery": true, "Casper Check": true]
+    currentGatewayAddress(interface: .wifi) { address in
+        if let addr = address {
         }
         else {
             listy["GatewayIP"] = false
         }
-      }
-    Task{
-        pingDNS(host: "8.8.8.8", domain: "google.com", timeout: 2) {
+    }
+    DNSquery(host: "8.8.8.8", domain: "google.com", timeout: 2, ){
         
         rtt in
-            if rtt == nil
-            {
-                listy["pingDNS"] = false
-            }
+        if let rtt = rtt
+        {
+            //print("DNS ping RTT: \(rtt * 1000) ms")
+        }
+        else
+        {
+            listy["DNSquery"] = false
         }
     }
     var m = ""
-    Task{
-        m = webCheck(website: "https://Casper.pinelakeprep.org:8443/")
-        if m != ("found \("Jamf Pro") in response!"){
-            listy["Casper Check"] = false
-        }
+    m = webCheck(website: "https://Casper.pinelakeprep.org:8443")
+    if (m != ("Found Jamf Pro in the response!")){
+        listy["Casper Check"] = false
     }
     var msg = ""
-//    if (listy["Casper check"] == true) && (listy["pingDNS"] == true){
-//        msg = "all tests passed"
-//    }
-//    else if((listy["Casper check"] == true) && (listy["pingDNS"] == false)){
-//        msg = "dns ping to google failed"
-//    }
-//    else if((listy["Casper check"] == false) && (listy["pingDNS"] == true)){
-//        msg = "get request to Casper failed"
-//    }
-//    else{
-//        msg = "all tests failed"
-//    }
-    if (listy["GatewayIP"] == true) && (listy["pingDNS"] == true) && (listy["Casper Check"] == true){
+        //    if (listy["Casper check"] == true) && (listy["pingDNS"] == true){
+        //        msg = "all tests passed"
+        //    }
+        //    else if((listy["Casper check"] == true) && (listy["pingDNS"] == false)){
+        //        msg = "dns ping to google failed"
+        //    }
+        //    else if((listy["Casper check"] == false) && (listy["pingDNS"] == true)){
+        //        msg = "get request to Casper failed"
+        //    }
+        //    else{
+        //        msg = "all tests failed"
+        //    }
+    let q = "Could not reach google"
+    let g = "could not reach gateway address"
+    let w = "could not reach PLP website"
+    let t = ", please show your teacher this message!"
+    if (listy["GatewayIP"] == true) && (listy["DNSquery"] == true) && (listy["Casper Check"] == true){
         msg = "All tests successful"
-        }
-    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == true) && (listy["Casper Check"] == true){
-        msg = "Gateway address not found"
+        message = "All tests successful, please show your teacher this message!"
+        fmessage = "Your good to go!"
+    }
+    else if (listy["GatewayIP"] == false) && (listy["DNSquery"] == true) && (listy["Casper Check"] == true){
+        msg = "Gateway IP unresponsive"
+        message = g + t
+        fmessage = "You might have some problems:"
+        
         
     }
-    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == false) && (listy["Casper Check"] == true){
+    else if (listy["GatewayIP"] == false) && (listy["DNSquery"] == false) && (listy["Casper Check"] == true){
         msg = "Gateway address not found and DNS ping to google not responsive"
+        message = q + " and " + g + t
+        fmessage = "You might have some problems:"
         
     }
-    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == true) && (listy["Casper Check"] == false){
+    else if (listy["GatewayIP"] == false) && (listy["DNSquery"] == true) && (listy["Casper Check"] == false){
         msg = "Gateway address not found and Casper GET unresponsive"
+        message = g + " and " + w + t
+        fmessage = "You might have some problems:"
         
     }
-    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == false) && (listy["Casper Check"] == true){
+    else if (listy["GatewayIP"] == true) && (listy["DNSquery"] == false) && (listy["Casper Check"] == true){
         msg = "DNS ping to google not responsive"
+        message = q  + t
+        fmessage = "You might have some problems:"
         
     }
-    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == true) && (listy["Casper Check"] == false){
+    else if (listy["GatewayIP"] == true) && (listy["DNSquery"] == true) && (listy["Casper Check"] == false){
         msg = "Casper GET unresponsive"
+        message = w + t
+        fmessage = "You might have some problems:"
     }
-    else if (listy["GatewayIP"] == true) && (listy["pingDNS"] == false) && (listy["Casper Check"] == false){
+    else if (listy["GatewayIP"] == true) && (listy["DNSquery"] == false) && (listy["Casper Check"] == false){
         msg = "DNS ping to google unresponsive and Casper GET unresponsive"
+        message = q + " and " + w + t
+        fmessage = "You might have some problems:"
     }
-    else if (listy["GatewayIP"] == false) && (listy["pingDNS"] == false) && (listy["Casper Check"] == false){
+    else if (listy["GatewayIP"] == false) && (listy["DNSquery"] == false) && (listy["Casper Check"] == false){
         msg = "All tests failed"
+        message = "All tests failed, please show your teacher this message!"
+        fmessage = "You might have some problems:"
     }
-    
-    
-    sendLog(serial: "111", level: "3",srcIP: String(ip),srcMAC: "",user: "Network Tester", action: "Network test",msg: msg)
-    
+        
+        
+        sendLog(serial: "111", level: "3",srcIP: String(ip),srcMAC: "placeholder mac address",user: "Network Tester", action: "Network test",msg: msg)
+        
     
 }

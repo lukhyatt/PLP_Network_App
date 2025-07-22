@@ -39,12 +39,13 @@ func buildDNSQuery(for domain: String) -> Data {
 ///   - domain: any domain to look up (e.g. “example.com”)
 ///   - timeout: how long to wait (in seconds) before giving up
 ///   - completion: called with the RTT in seconds if successful, or `nil` on failure/time-out
-func pingDNS(
+func DNSquery(
   host: String = "8.8.8.8",
   domain: String = "google.com",
   timeout: TimeInterval = 5,
   completion: @escaping (TimeInterval?) -> Void
 ) {
+    let semaphore = DispatchSemaphore(value: 0)
   // 1) Build endpoint & port
   let endpoint = NWEndpoint.Host(host)
   guard let port53 = NWEndpoint.Port(rawValue: 53) else {
@@ -69,6 +70,7 @@ func pingDNS(
   // 4) Schedule the timeout
   DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
     finish(nil)  // will only fire if nothing else has called finish yet
+      semaphore.signal()
   }
 
   // 5) Wire up the send/receive
@@ -82,15 +84,19 @@ func pingDNS(
         conn.receiveMessage { data, context, isComplete, recvError in
           if let d = data, !d.isEmpty, recvError == nil {
             finish(Date().timeIntervalSince(start))
+              semaphore.signal()
           } else {
             finish(nil)
+              semaphore.signal()
           }
         }
       })
     }
+      
   }
 
   // 6) Kick it off
   conn.start(queue: .global())
+    semaphore.wait()
 }
 

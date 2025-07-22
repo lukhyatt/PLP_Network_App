@@ -11,35 +11,40 @@ import Foundation
 
 
 func webCheck(website: String) -> String{
+    let semaphore = DispatchSemaphore(value: 0)
     var s = ""
     if let url = URL(string: website) {
         let request = URLRequest(url: url)
-    //request.httpMethod = "HEAD"
     URLSession(configuration: .default)
         .dataTask(with: request) { (data, response, error) -> Void in
             guard error == nil else {
                 //print("Error:", error ?? "")
                 s = "Error: " + (error?.localizedDescription ?? "")
-                print(s)
+                //print(s)
+                semaphore.signal()
                 return
             }
             guard let data = data else {
+                    semaphore.signal()
                     //print("No response data")
                     s = "No response data"
+                    print(s)
                     return
                 }
                 if let bodyText = String(data: data, encoding: .utf8) {
                     let target = "Jamf Pro"    // ← whatever you’re looking for
                         if bodyText.contains(target) {
-                            s = "Found “\(target)” in the response!"
-                            print( "Found “\(target)” in the response!")
+                            semaphore.signal()
+                            s = "Found Jamf Pro in the response!"
                         } else {
                             s = "“\(target)” not found."
-                            print("“\(target)” not found.")
+                            semaphore.signal()
                         }
                 }
+                
         }
         .resume()
     }
+    semaphore.wait()
     return s
 }

@@ -100,7 +100,7 @@ struct ContentView: View {
 
             // Simulate a 1-second network test.
             // Your pingTest() and post() would happen here.
-            pingTest()
+            //pingTest()
             //fetchWifiIP()
             post()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
